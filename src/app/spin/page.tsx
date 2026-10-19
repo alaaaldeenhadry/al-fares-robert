@@ -8,7 +8,6 @@ type Prize = {
   label: string;
 };
 
-// الجوائز مع الأوزان (للعرض فقط — الحساب في الـ API)
 const prizes = [
   { label: "حظ أوفر", color: "#1e293b", type: "lose" },
   { label: "محاولة أخرى", color: "#075985", type: "retry" },
@@ -32,6 +31,7 @@ export default function SpinPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Prize | null>(null);
   const [error, setError] = useState("");
+  const [retryCode, setRetryCode] = useState<string>("");
 
   const segmentAngle = (Math.PI * 2) / prizes.length;
 
@@ -47,13 +47,11 @@ export default function SpinPage() {
 
     ctx.clearRect(0, 0, size, size);
 
-    // Outer ring
     ctx.beginPath();
     ctx.arc(center, center, radius + 6, 0, Math.PI * 2);
     ctx.fillStyle = "#0ea5e9";
     ctx.fill();
 
-    // Segments
     prizes.forEach((prize, i) => {
       const startAngle = i * segmentAngle + rot;
       const endAngle = startAngle + segmentAngle;
@@ -69,7 +67,6 @@ export default function SpinPage() {
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Text
       ctx.save();
       ctx.translate(center, center);
       ctx.rotate(startAngle + segmentAngle / 2);
@@ -80,7 +77,6 @@ export default function SpinPage() {
       ctx.restore();
     });
 
-    // Center
     ctx.beginPath();
     ctx.arc(center, center, 40, 0, Math.PI * 2);
     ctx.fillStyle = "#0f172a";
@@ -101,7 +97,6 @@ export default function SpinPage() {
   }, []);
 
   const spinToPrize = (prizeIndex: number, onComplete: () => void) => {
-    // الحساب: المؤشر على اليمين (زاوية 0)
     const segmentCenter = prizeIndex * segmentAngle + segmentAngle / 2;
     const targetRotation = -segmentCenter;
 
@@ -150,11 +145,13 @@ export default function SpinPage() {
     setError("");
     setResult(null);
 
+    const currentCode = code.trim();
+
     try {
       const res = await fetch("/api/spin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: code.trim() }),
+        body: JSON.stringify({ code: currentCode }),
       });
 
       const data = await res.json();
@@ -165,7 +162,6 @@ export default function SpinPage() {
         return;
       }
 
-      // نلاقي index الجائزة
       const prizeLabel = data.prize.label;
       let prizeIndex = prizes.findIndex(
         (p) =>
@@ -183,7 +179,14 @@ export default function SpinPage() {
 
       spinToPrize(prizeIndex, () => {
         setResult(data.prize);
-        setCode("");
+        // ✅ إذا "محاولة أخرى" → نخلي الكود بالحقل (عشان يلف مرة ثانية)
+        if (data.prize.type === "retry") {
+          setRetryCode(currentCode);
+          setCode(currentCode);
+        } else {
+          setCode("");
+          setRetryCode("");
+        }
         setLoading(false);
       });
     } catch {
@@ -244,13 +247,23 @@ export default function SpinPage() {
           >
             <div className="text-center mb-4">
               <div className="text-4xl mb-2">🔑</div>
-              <h3 className="text-xl font-bold mb-1">أدخل كود العجلة</h3>
-              <p className="text-slate-400 text-sm">اكتب الكود الذي حصلت عليه</p>
+              <h3 className="text-xl font-bold mb-1">
+                {retryCode ? "محاولة أخرى!" : "أدخل كود العجلة"}
+              </h3>
+              <p className="text-slate-400 text-sm">
+                {retryCode ? "اضغط دوّر العجلة لاستخدام نفس الكود" : "اكتب الكود الذي حصلت عليه"}
+              </p>
             </div>
 
             {error && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm text-center">
                 {error}
+              </div>
+            )}
+
+            {retryCode && (
+              <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm text-center">
+                🔄 محاولة إضافية مجانية!
               </div>
             )}
 
@@ -263,14 +276,14 @@ export default function SpinPage() {
                 maxLength={20}
                 dir="ltr"
                 className="flex-1 px-5 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none text-white placeholder:text-slate-600 font-mono text-lg tracking-widest text-center transition"
-                disabled={loading}
+                disabled={loading || !!retryCode}
               />
               <button
                 type="submit"
                 disabled={loading}
                 className="px-8 py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-slate-900 font-bold transition whitespace-nowrap"
               >
-                {loading ? "جاري الدوران..." : "دوّر العجلة"}
+                {loading ? "جاري الدوران..." : retryCode ? "🔄 دوّر مرة أخرى" : "دوّر العجلة"}
               </button>
             </div>
 
@@ -318,8 +331,14 @@ export default function SpinPage() {
                   : "text-slate-400"
               }`}
             >
-              {result.type === "retry" ? "جرّب مرة أخرى" : result.label}
+              {result.type === "retry" ? "لف مرة أخرى" : result.label}
             </div>
+
+            {result.type === "retry" && (
+              <p className="text-sm text-yellow-300 mb-4">
+                🎁 حصلت على محاولة إضافية مجانية!
+              </p>
+            )}
 
             {result.type === "win" && (
               <div className="space-y-3">
@@ -338,10 +357,22 @@ export default function SpinPage() {
             )}
 
             <button
-              onClick={() => setResult(null)}
-              className="mt-6 px-6 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-sm transition"
+              onClick={() => {
+                setResult(null);
+                setError("");
+                // إذا "محاولة أخرى" → نخلي الكود، وإلا نمسحه
+                if (result.type !== "retry") {
+                  setCode("");
+                  setRetryCode("");
+                }
+              }}
+              className={`mt-6 px-6 py-2 rounded-lg text-sm transition ${
+                result.type === "retry"
+                  ? "bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold"
+                  : "bg-slate-800 hover:bg-slate-700 text-white"
+              }`}
             >
-              العودة
+              {result.type === "retry" ? "🔄 لف مرة أخرى" : "العودة"}
             </button>
           </div>
         )}

@@ -52,15 +52,17 @@ export async function POST(req: NextRequest) {
     // نختار الجائزة
     const prize = pickPrize();
 
-    // نحدّث الكود
-    await sql`
-      update spin_codes
-      set is_used = true,
-          used_at = now(),
-          prize_won = ${prize.label},
-          prize_type = ${prize.type}
-      where code = ${trimmedCode}
-    `;
+    // ✅ إذا "محاولة أخرى" → ما نعلّم الكود كمستخدم
+    if (prize.type !== "retry") {
+      await sql`
+        update spin_codes
+        set is_used = true,
+            used_at = now(),
+            prize_won = ${prize.label},
+            prize_type = ${prize.type}
+        where code = ${trimmedCode}
+      `;
+    }
 
     return NextResponse.json({
       success: true,
