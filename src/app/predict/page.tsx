@@ -43,6 +43,7 @@ export default function PredictPage() {
         day: "numeric",
         hour: "2-digit",
         minute: "2-digit",
+        timeZone: "Asia/Damascus",
       });
     } catch {
       return dateStr;
@@ -61,7 +62,6 @@ export default function PredictPage() {
       </section>
 
       <section className="max-w-4xl mx-auto px-4 py-12">
-        {/* Tabs */}
         <div className="flex gap-2 mb-8 bg-slate-900 p-1 rounded-xl border border-slate-800 w-fit mx-auto flex-wrap">
           <button
             onClick={() => setActiveTab("open")}
