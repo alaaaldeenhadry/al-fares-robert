@@ -58,22 +58,31 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-white transition"
-            aria-label="القائمة"
-          >
-            {isOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
+          {/* Auth / Mobile Menu */}
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin"
+              className="hidden md:inline-block px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-900 text-sm font-bold transition"
+            >
+              دخول
+            </Link>
+            
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-white transition"
+              aria-label="القائمة"
+            >
+              {isOpen ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -89,6 +98,13 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            <Link
+              href="/admin"
+              onClick={() => setIsOpen(false)}
+              className="px-4 py-3 rounded-xl text-base font-bold transition bg-sky-500 hover:bg-sky-400 text-slate-900 text-center mt-2"
+            >
+              دخول الإدارة
+            </Link>
           </nav>
         )}
       </div>
