@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 
-// دالة اختيار الجائزة حسب الأوزان
 function pickPrize() {
   const prizes = [
     { type: "lose", amount: 0, weight: 40, label: "حظ أوفر" },
@@ -36,7 +35,6 @@ export async function POST(req: NextRequest) {
 
     const trimmedCode = code.trim().toUpperCase();
 
-    // نتحقق من الكود
     const result = await sql`
       select id, is_used from spin_codes where code = ${trimmedCode} limit 1
     `;
@@ -49,10 +47,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "هذا الكود مستخدم من قبل" }, { status: 400 });
     }
 
-    // نختار الجائزة
+    const codeId = result[0].id;
     const prize = pickPrize();
 
-    // ✅ إذا "محاولة أخرى" → ما نعلّم الكود كمستخدم
+    // إذا "محاولة أخرى" → ما نعلّم الكود كمستخدم
     if (prize.type !== "retry") {
       await sql`
         update spin_codes
@@ -61,6 +59,17 @@ export async function POST(req: NextRequest) {
             prize_won = ${prize.label},
             prize_type = ${prize.type}
         where code = ${trimmedCode}
+      `;
+    }
+
+    // ✅ إذا "win" → نحفظ الجائزة في جدول prizes
+    if (prize.type === "win") {
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + 30); // 30 يوم للمطالبة
+
+      await sql`
+        insert into prizes (code_id, amount, status, deadline)
+        values (${codeId}, ${prize.amount}, 'pending', ${deadline.toISOString()})
       `;
     }
 
