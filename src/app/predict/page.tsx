@@ -56,7 +56,9 @@ export default function PredictPage() {
           <h1 className="text-3xl md:text-5xl font-bold mb-3">
             🎯 توقع <span className="text-sky-400">واربح</span>
           </h1>
-          <p className="text-slate-400 text-base md:text-lg">توقّع نتائج المباريات واحصل على نقاط</p>
+          <p className="text-slate-400 text-base md:text-lg">
+            توقّع نتائج المباريات واحصل على نقاط
+          </p>
         </div>
       </section>
 
@@ -144,12 +146,19 @@ export default function PredictPage() {
                       </div>
                     </div>
 
+                    {/* Login notice */}
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-1.5 md:p-2 mb-2 text-center">
+                      <div className="text-[9px] md:text-[10px] text-yellow-400 font-semibold leading-tight">
+                        ⚠️ سجّل دخول للتوقّع
+                      </div>
+                    </div>
+
                     {/* Button */}
                     <button
                       disabled
                       className="w-full mt-auto px-2 py-1.5 md:py-2 rounded-lg bg-slate-800 text-slate-500 font-bold cursor-not-allowed text-[10px] md:text-xs"
                     >
-                      قريباً
+                      توقّع (قريباً)
                     </button>
                   </div>
                 </div>
