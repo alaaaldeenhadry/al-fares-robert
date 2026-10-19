@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cairo, Tajawal } from "next/font/google";
 import "./globals.css";
+import Header from "@/components/Header";
 
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -17,6 +18,9 @@ const tajawal = Tajawal({
 export const metadata: Metadata = {
   title: "Al Fares Robert",
   description: "منصة البكجات والتوقعات الرياضية وعجلة الحظ",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -27,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable} ${tajawal.variable}`}>
       <body className="min-h-full flex flex-col antialiased bg-slate-950 text-white">
+        <Header />
         {children}
       </body>
     </html>
