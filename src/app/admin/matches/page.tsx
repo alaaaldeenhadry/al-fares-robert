@@ -121,8 +121,8 @@ export default function AdminMatches() {
     setSaving(true);
     setError("");
 
-    const match_date = `${form.match_date_date}T${form.match_date_time}:00`;
-    const predictions_close_at = `${form.predictions_date}T${form.predictions_time}:00`;
+    const match_date = `${form.match_date_date}T${form.match_date_time}:00+03:00`;
+    const predictions_close_at = `${form.predictions_date}T${form.predictions_time}:00+03:00`;
 
     const payload = {
       team1: form.team1,
