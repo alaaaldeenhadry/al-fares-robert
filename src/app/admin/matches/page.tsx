@@ -21,11 +21,11 @@ type Match = {
 const emptyForm = {
   team1: "",
   team2: "",
-  team1_logo: "",
-  team2_logo: "",
   league: "",
-  match_date: "",
-  predictions_close_at: "",
+  match_date_date: "",
+  match_date_time: "",
+  predictions_date: "",
+  predictions_time: "",
 };
 
 export default function AdminMatches() {
@@ -38,7 +38,6 @@ export default function AdminMatches() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Finish modal
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [finishMatch, setFinishMatch] = useState<Match | null>(null);
   const [finishScore1, setFinishScore1] = useState("0");
@@ -68,33 +67,52 @@ export default function AdminMatches() {
   }, [router]);
 
   const openAdd = () => {
+    // قيم افتراضية: اليوم + الساعة الحالية
+    const now = new Date();
+    const dateStr = now.toISOString().split("T")[0];
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
     setEditingId(null);
-    setForm(emptyForm);
+    setForm({
+      ...emptyForm,
+      match_date_date: dateStr,
+      match_date_time: timeStr,
+      predictions_date: dateStr,
+      predictions_time: timeStr,
+    });
     setError("");
     setShowModal(true);
   };
 
   const openEdit = (match: Match) => {
     setEditingId(match.id);
-    // تحويل ISO إلى datetime-local format
-    const formatForInput = (iso: string) => {
-      if (!iso) return "";
+
+    const splitDateTime = (iso: string) => {
+      if (!iso) return { date: "", time: "" };
       try {
         const d = new Date(iso);
         const pad = (n: number) => String(n).padStart(2, "0");
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        return {
+          date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+          time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+        };
       } catch {
-        return "";
+        return { date: "", time: "" };
       }
     };
+
+    const md = splitDateTime(match.match_date);
+    const pd = splitDateTime(match.predictions_close_at);
+
     setForm({
       team1: match.team1,
       team2: match.team2,
-      team1_logo: match.team1_logo || "",
-      team2_logo: match.team2_logo || "",
       league: match.league || "",
-      match_date: formatForInput(match.match_date),
-      predictions_close_at: formatForInput(match.predictions_close_at),
+      match_date_date: md.date,
+      match_date_time: md.time,
+      predictions_date: pd.date,
+      predictions_time: pd.time,
     });
     setError("");
     setShowModal(true);
@@ -105,6 +123,20 @@ export default function AdminMatches() {
     setSaving(true);
     setError("");
 
+    // ندمج التاريخ والوقت
+    const match_date = `${form.match_date_date}T${form.match_date_time}:00`;
+    const predictions_close_at = `${form.predictions_date}T${form.predictions_time}:00`;
+
+    const payload = {
+      team1: form.team1,
+      team2: form.team2,
+      team1_logo: "",
+      team2_logo: "",
+      league: form.league,
+      match_date,
+      predictions_close_at,
+    };
+
     const url = editingId
       ? `/api/admin/matches/${editingId}`
       : "/api/admin/matches";
@@ -114,7 +146,7 @@ export default function AdminMatches() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -151,7 +183,6 @@ export default function AdminMatches() {
   };
 
   const handleChangeStatus = async (id: number, status: string) => {
-    if (!confirm(`تغيير حالة المباراة إلى "${status}"؟`)) return;
     try {
       const res = await fetch(`/api/admin/matches/${id}`, {
         method: "PUT",
@@ -289,7 +320,7 @@ export default function AdminMatches() {
                       📅 {formatDate(match.match_date)}
                     </div>
                     <div className="text-xs text-red-400">
-                      ⏰ التوقعات تغلق: {formatDate(match.predictions_close_at)}
+                      ⏰ إغلاق التوقعات: {formatDate(match.predictions_close_at)}
                     </div>
                     {match.status === "finished" && match.final_score1 !== null && (
                       <div className="text-sm text-sky-400 font-bold mt-1">
@@ -401,28 +432,62 @@ export default function AdminMatches() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">موعد المباراة *</label>
-                <input
-                  type="datetime-local"
-                  value={form.match_date}
-                  onChange={(e) => setForm({ ...form, match_date: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none text-white transition"
-                  required
-                  dir="ltr"
-                />
+              {/* موعد المباراة: تاريخ + وقت */}
+              <div className="border-t border-slate-800 pt-4">
+                <label className="block text-sm text-sky-400 mb-2 font-semibold">📅 موعد المباراة</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">التاريخ *</label>
+                    <input
+                      type="date"
+                      value={form.match_date_date}
+                      onChange={(e) => setForm({ ...form, match_date_date: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none text-white transition"
+                      required
+                      dir="ltr"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">الوقت *</label>
+                    <input
+                      type="time"
+                      value={form.match_date_time}
+                      onChange={(e) => setForm({ ...form, match_date_time: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none text-white transition"
+                      required
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">إغلاق التوقعات *</label>
-                <input
-                  type="datetime-local"
-                  value={form.predictions_close_at}
-                  onChange={(e) => setForm({ ...form, predictions_close_at: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none text-white transition"
-                  required
-                  dir="ltr"
-                />
+              {/* إغلاق التوقعات: تاريخ + وقت */}
+              <div className="border-t border-slate-800 pt-4">
+                <label className="block text-sm text-red-400 mb-2 font-semibold">⏰ إغلاق التوقعات</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">التاريخ *</label>
+                    <input
+                      type="date"
+                      value={form.predictions_date}
+                      onChange={(e) => setForm({ ...form, predictions_date: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none text-white transition"
+                      required
+                      dir="ltr"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">الوقت *</label>
+                    <input
+                      type="time"
+                      value={form.predictions_time}
+                      onChange={(e) => setForm({ ...form, predictions_time: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-sky-500 focus:outline-none text-white transition"
+                      required
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">
