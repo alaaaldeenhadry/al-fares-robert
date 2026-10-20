@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const navItems = [
@@ -13,8 +13,34 @@ const navItems = [
 
 const TELEGRAM_CHANNEL = "https://t.me/AlFaresRobert1";
 
+type Player = {
+  id: number;
+  telegram_username: string;
+  nickname: string;
+  total_points: number;
+};
+
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const [player, setPlayer] = useState<Player | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("player_data");
+    if (saved) {
+      try {
+        setPlayer(JSON.parse(saved));
+      } catch {
+        // نتجاهل
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("player_logged_in");
+    localStorage.removeItem("player_data");
+    setPlayer(null);
+    window.location.href = "/";
+  };
 
   return (
     <header className="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50">
@@ -60,13 +86,30 @@ export default function Header() {
 
           {/* Auth / Mobile Menu */}
           <div className="flex items-center gap-2">
-            <Link
-              href="/admin"
-              className="hidden md:inline-block px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-900 text-sm font-bold transition"
-            >
-              دخول
-            </Link>
-            
+            {player ? (
+              <div className="hidden md:flex items-center gap-2">
+                <div className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700">
+                  <span className="text-xs text-slate-400">👤</span>
+                  <span className="text-sm text-white font-semibold mr-1">
+                    {player.nickname}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm border border-red-500/30 transition"
+                >
+                  خروج
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden md:inline-block px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-900 text-sm font-bold transition"
+              >
+                دخول
+              </Link>
+            )}
+
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="md:hidden w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-white transition"
@@ -98,13 +141,34 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href="/admin"
-              onClick={() => setIsOpen(false)}
-              className="px-4 py-3 rounded-xl text-base font-bold transition bg-sky-500 hover:bg-sky-400 text-slate-900 text-center mt-2"
-            >
-              دخول الإدارة
-            </Link>
+            {player ? (
+              <>
+                <div className="px-4 py-3 rounded-xl bg-slate-800 border border-slate-700">
+                  <div className="text-xs text-slate-400 mb-1">مسجل دخول بـ:</div>
+                  <div className="font-bold text-white">{player.nickname}</div>
+                  <div className="text-xs text-sky-400 mt-1">
+                    ⭐ {player.total_points.toLocaleString("ar-EG")} نقطة
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    handleLogout();
+                  }}
+                  className="px-4 py-3 rounded-xl text-base font-bold transition bg-red-500/10 text-red-400 border border-red-500/30"
+                >
+                  خروج
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="px-4 py-3 rounded-xl text-base font-bold transition bg-sky-500 hover:bg-sky-400 text-slate-900 text-center mt-2"
+              >
+                تسجيل الدخول
+              </Link>
+            )}
           </nav>
         )}
       </div>
