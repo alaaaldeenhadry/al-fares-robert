@@ -78,7 +78,7 @@ export default function WinnersPage() {
                   <div className="font-bold truncate">{player.name}</div>
                 </div>
                 <div className="text-sky-400 font-bold text-lg shrink-0">
-                  {player.points.toLocaleString("ar-EG")}
+                  {player.points.toLocaleString("ar-EG")} <span className="text-xs text-slate-500">نقطة</span>
                 </div>
               </div>
             ))}
