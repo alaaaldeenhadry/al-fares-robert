@@ -229,6 +229,11 @@ export default function AdminMatches() {
         return;
       }
 
+      const result = await res.json();
+      
+      // عرض إحصائيات الحساب
+      alert(`✅ تم إنهاء المباراة بنجاح!\n\n📊 الإحصائيات:\n• عدد التوقعات: ${result.stats.total_predictions}\n• التوقعات الصحيحة: ${result.stats.correct_predictions}`);
+
       setShowFinishModal(false);
       setFinishMatch(null);
       await fetchMatches();
