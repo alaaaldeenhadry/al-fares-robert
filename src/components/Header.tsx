@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const navItems = [
+const publicNavItems = [
   { href: "/", label: "الرئيسية" },
   { href: "/pages", label: "البكجات" },
   { href: "/predict", label: "توقع واربح" },
@@ -72,8 +72,8 @@ export default function Header() {
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-6 text-sm">
-            {navItems.map((item) => (
+          <nav className="hidden md:flex items-center gap-5 text-sm">
+            {publicNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -82,16 +82,27 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            {player && (
+              <Link
+                href="/my-predictions"
+                className="text-sky-400 hover:text-sky-300 font-semibold transition"
+              >
+                📋 توقعاتي
+              </Link>
+            )}
           </nav>
 
           {/* Auth / Mobile Menu */}
           <div className="flex items-center gap-2">
             {player ? (
               <div className="hidden md:flex items-center gap-2">
-                <div className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700">
-                  <span className="text-xs text-slate-400">👤</span>
-                  <span className="text-sm text-white font-semibold mr-1">
+                <div className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 flex items-center gap-2">
+                  <span className="text-xs">👤</span>
+                  <span className="text-sm text-white font-semibold">
                     {player.nickname}
+                  </span>
+                  <span className="text-xs text-sky-400 font-bold">
+                    {player.total_points.toLocaleString("ar-EG")}
                   </span>
                 </div>
                 <button
@@ -131,7 +142,7 @@ export default function Header() {
         {/* Mobile Menu */}
         {isOpen && (
           <nav className="md:hidden mt-4 pt-4 border-t border-slate-800 flex flex-col gap-2">
-            {navItems.map((item) => (
+            {publicNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -141,9 +152,20 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+
+            {player && (
+              <Link
+                href="/my-predictions"
+                onClick={() => setIsOpen(false)}
+                className="px-4 py-3 rounded-xl text-base font-bold transition bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30"
+              >
+                📋 توقعاتي
+              </Link>
+            )}
+
             {player ? (
               <>
-                <div className="px-4 py-3 rounded-xl bg-slate-800 border border-slate-700">
+                <div className="px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 mt-2">
                   <div className="text-xs text-slate-400 mb-1">مسجل دخول بـ:</div>
                   <div className="font-bold text-white">{player.nickname}</div>
                   <div className="text-xs text-sky-400 mt-1">
